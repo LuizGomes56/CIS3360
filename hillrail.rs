@@ -31,8 +31,162 @@ Due Date: September 12th 2025
 
 // Suppress warnings
 #![allow(dead_code)]
+#![allow(non_snake_case)]
+
+// ? Probably I took 8 hours to do that
+// ! BLOCKS WHERE AI WAS USED ARE DISCLOSED IN THE COMMENTS
 
 use std::str::Split;
+
+/// This is probably thd worst ever implementation of this
+/// ? NO AI WAS USED HERE
+fn apply_rail_fence(ciphertext: &str, rail_fence_depth: usize) -> String {
+    /*
+    #![L4 Symmetric Crypto.pdf] page 33
+    meet me after the toga party
+    cipher: MEMATRHTGPRYETEFETEOAAT
+
+    appearently the text is split in depth arrays,
+    each byte is mapped to a position from top bottom-right
+     */
+
+    // if depth is n, n arrays should be created
+    let mut arrays =
+        vec![vec!['\0'; ciphertext.len().div_ceil(rail_fence_depth)]; rail_fence_depth];
+
+    // the example has 12 elements in first array, and 23 letters, depth = 2
+    // 23 / 2 = 11.5, since target is 12, div_ceil() will guarantee that it is rounded up
+    // (0,0), (1,1), (0,1), (1,2), (0,2), (1,3), (0,3), ...
+    // This is the pattern (Array index, Array position)
+
+    // DEPTH = 3
+    // (0,0), (1,1), (2,2), (1,2), (0,2), (1,3), (2,4), (1,4), (0,4), (1,5), (2,6), (1,6), (0,6), (1,7), (2,8), (1,8), (0, 8)
+    // (INDEX, INDEX) goes until rail_fence_depth is reached
+    // after that: depth - 2 indicates X in tuple at position [depth]
+    // next [depth - 1] tuples have the same Y, Y = [depth - 1]
+    // Then a well defined pattern repeats -> (1,3), (2,4), (1,4), (0,4), (1,5), (2,6), (1,6), (0,6), (1,7), (2,8), (1,8), (0, 8)
+    // 3, 4, 4, 4, 5, 6, 6, 6, ... -> A number, then 3 times the successor, then another number, then 3 times its ...
+    // this works for depth = 3 only
+
+    // DEPTH = 2
+    // almost the described above, but the pattern of repetition of Y position in tuples after
+    // depth + [depth - 1] are 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, ... same number twice
+
+    // store tuples in order of what index in the arrays is at, and in what position
+    // this is going to be used to make the ciphertext (By ordering X, then Y)
+    let mut result_tuples: Vec<(usize, usize)> = vec![(0, 0); ciphertext.len()];
+
+    let mut current_position = 0;
+    for i in 0..rail_fence_depth {
+        result_tuples[i] = (i, i);
+        current_position += 1;
+    }
+
+    // change only the Y values of tuples starting from depth + depth - 1 as in the
+    // previous comment, they have the same Y. X will not be changed here
+    // at this point, current_position = depth so it doesn't really matter what range
+    // format is used
+    for i in current_position..(2 * rail_fence_depth - 1) {
+        result_tuples[i].1 = rail_fence_depth - 1;
+        current_position += 1;
+    }
+
+    // number, number, number + 1, number + 1, number + 2, number + 2, ...
+    // number start at == depth
+    if rail_fence_depth == 2 {
+        let start = current_position;
+        for i in (start..result_tuples.len()).step_by(2) {
+            // the Y value of that tuple
+            let y = rail_fence_depth + (i - start) / 2;
+            result_tuples[i].1 = y;
+            if i + 1 < result_tuples.len() {
+                result_tuples[i + 1].1 = y;
+            }
+        }
+    }
+    // 3, 4, 4, 4, 5, 6, 6, 6, ... -> A number, then 3 times the successor
+    // this pattern will start at == depth as well
+    else if rail_fence_depth == 3 {
+        // This was the only thing that was not passing in the tests
+        result_tuples[3].0 = 1;
+        // y will start at the same value as depth
+        let mut y = rail_fence_depth;
+        let mut i = current_position;
+        // false then group 1 (Single), true then group 3 numbers
+        let mut use_big_group = false;
+
+        // add the repetition: 3, 4, 4, 4, 5, 6, 6, 6, ...
+        while i < result_tuples.len() {
+            let group_len = if use_big_group { 3 } else { 1 };
+            let end = (i + group_len).min(result_tuples.len());
+            for k in i..end {
+                result_tuples[k].1 = y;
+            }
+            i = end;
+            y += 1;
+            // alternates between groups
+            use_big_group = !use_big_group;
+        }
+    }
+
+    // start at 1 for both depth = 2 and 3
+    let mut x = 1;
+    // control when x should be incremented/decremented
+    let mut going_down = true;
+
+    // associate the correct X for each tuple
+    for i in (2 * rail_fence_depth - 1)..result_tuples.len() {
+        result_tuples[i].0 = x;
+        // x will increment until it reaches the top (depth)
+        // depth dictates how many arrays there will be split, so
+        // there will be depth - 1 arrays, if it is the max, x should
+        // start decrementing to follow the pattern
+        if going_down {
+            if x + 1 == rail_fence_depth {
+                going_down = false;
+                x -= 1;
+            } else {
+                x += 1;
+            }
+        } else {
+            // if it reaches zero, start to increment
+            // important to respect array bounds
+            if x == 0 {
+                going_down = true;
+                x += 1;
+            } else {
+                x -= 1;
+            }
+        }
+    }
+
+    // from here, result_tuples has the exact order that each char in the string
+    // has to go
+    for (i, (x, y)) in result_tuples.iter().enumerate() {
+        // add each char in its respective position
+        arrays[*x].insert(*y, ciphertext.chars().nth(i).unwrap());
+    }
+
+    // println!("Result arrays: {:?}", arrays);
+    // println!("Result tuples: {:?}", result_tuples);
+
+    // now the position in which each letter should be retreived is known
+    // after that, it is only necessary to join everything in a string
+    let sorted_tuples_by_x_then_y = {
+        let mut sorted_tuples = result_tuples.clone();
+        sorted_tuples.sort_by_key(|(x, _)| *x);
+        sorted_tuples
+    };
+
+    let mut result = String::new();
+    // x does not matter because we read the array 0, then 1, ...
+    for (x, y) in sorted_tuples_by_x_then_y {
+        // add each char in its respective position
+        result.push(arrays[x][y]);
+    }
+
+    result
+}
 
 fn main() {
     /* Example of what comes in std::env::args on my machine
@@ -61,11 +215,11 @@ fn main() {
 
     // Read contents to a full String, instead of line by line
     let key_file_content = std::fs::read_to_string(key_path)
-        .expect("Failed to read key file")
+        .expect("Failed to read key file. Is the key path correct?")
         // Some \r were present in the document
         .replace("\r", "");
-    let plaintext_file_content =
-        std::fs::read_to_string(plaintext_path).expect("Failed to read plaintext file");
+    let plaintext_file_content = std::fs::read_to_string(plaintext_path)
+        .expect("Failed to read plaintext file. Check its path");
 
     // The matrix dimension is a single integer in the first line
     // String.split("\n")[0] will yield the first line
@@ -124,7 +278,7 @@ fn main() {
         .collect::<Vec<_>>();
 
     println!("Key matrix:");
-    row_major_entries.display_raw();
+    row_major_entries.display();
 
     // store the result of the plaintext file parsing
     let mut plaintext_result = String::new();
@@ -141,13 +295,29 @@ fn main() {
             _ => continue,
         };
     }
+
+    /*
+    * #[CHAT GPT 5 THINKING]
+    ! GENERATED BY AI
+    * PROMPT: In Rust, create a function that takes in a string and prints
+    * a maximum of 80 characters per line, if there's overflow, print in the next line
+    * all characters are valid ASCII
+    ? It answered as a fn and I transformed the following closure
+    */
+    let print_80_per_line = |s: &str| {
+        for chunk in s.as_bytes().chunks(80) {
+            println!("{}", std::str::from_utf8(chunk).unwrap());
+        }
+    };
+
+    println!("\nPlaintext:");
+    print_80_per_line(&plaintext_result);
+
     // check plaintext_result and see if it is a multiple of "n"
     // "n" was the matrix dimension
     // if not, add "X" until it becomes a multiple
     // the best way to do that is see if the division is exact
-
-    println!("\nPlaintext:\n{}", plaintext_result);
-
+    // is by seeing if the length of the result is a multiple of the previous result, exact
     let mut result = plaintext_result.len() / matrix_dimension;
     while result * matrix_dimension != plaintext_result.len() {
         plaintext_result.push('X');
@@ -156,17 +326,23 @@ fn main() {
     }
 
     let ciphertext = generate_ciphertext(&row_major_entries, &plaintext_result);
-    println!("\nCiphertext:\n{}", ciphertext);
+    println!("\nCiphertext:");
+    print_80_per_line(&if rail_fence_depth > 1 {
+        apply_rail_fence(&ciphertext, rail_fence_depth)
+    } else {
+        ciphertext
+    });
     println!("\nDepth: {}", rail_fence_depth);
 }
 
-// Parameter "matrix" implements Matrix<usize> trait
-// L4 Symmetric Crypto.pdf page 30 (WEBCOURSES)
-fn generate_ciphertext(matrix: &[Vec<usize>], plaintext: &str) -> String {
-    assert!(matrix.is_square_matrix(), "Matrix is not square");
+/// Parameter "matrix" implements Matrix<usize> trait
+/// Reference: L4 Symmetric Crypto.pdf page 30 (WEBCOURSES)
+/// Tales a plaintext and a matrix and returns a ciphertext as a string
+fn generate_ciphertext(matrix_a: &[Vec<usize>], plaintext: &str) -> String {
+    assert!(matrix_a.is_square_matrix(), "Matrix is not square");
     // generate matrix to plaintext with depth N
     // number of columns that arg 1 has
-    let matrix_columns = matrix.num_columns();
+    let matrix_columns = matrix_a.num_columns();
 
     // plaintext here was already filled with "X"'s if not exact
     let number_of_elements_per_row = plaintext.len() / matrix_columns;
@@ -176,29 +352,43 @@ fn generate_ciphertext(matrix: &[Vec<usize>], plaintext: &str) -> String {
 
     // fill indexes
     // Example: (A B C D E F G H) -> (A, B); (C, D); (E, F); (G, H)
+    /*
+     * #[CHATGPT 5 THINKING]
+     * PROMPT: I have a string slice with only ASCII characters, and I have a Matrix
+     * type: Vec<Vec<usize>> zeroed, how to insert elements COLUMN by COLUMN, instead
+     * of filling row by row?
+     * - Number of elements per row is given at variable number_of_elements_per_row,
+     * - Number of columns is given at variable matrix_columns
+     * - String slice is given at variable plaintext
+     * - Matrix is given at variable matrix_b
+     */
     for col in 0..number_of_elements_per_row {
         for row in 0..matrix_columns {
+            // index in plaintext slice
             let index = matrix_columns * col + row;
-            matrix_b[row][col] = plaintext.chars().nth(index).unwrap() as usize;
+            // -b'A' to make it in range 0-25
+            matrix_b[row][col] = plaintext.chars().nth(index).unwrap() as usize - b'A' as usize;
         }
     }
 
-    println!("------------------------");
-    println!("Matrix_A:");
-    matrix.display_raw();
-    println!("------------------------");
-    println!("Matrix_B:");
-    matrix_b.display_raw();
-    println!("------------------------");
+    // println!("------------------------");
+    // println!("Matrix_A:");
+    // matrix_a.display();
+    // println!("------------------------");
+    // println!("Matrix_B:");
+    // matrix_b.display();
+    // println!("------------------------");
 
     // if matrix has 2 columns, b must have 2 rows; 7 columns -> 7 rows and so on
-    let mut result = matrix_multiply(matrix, &matrix_b);
+    let mut result = matrix_multiply(matrix_a, &matrix_b);
 
-    println!("Result:");
-    result.display_raw();
-    println!("------------------------");
+    // println!("Result of multiply:");
+    // result.display();
+    // println!("------------------------");
     apply_mod_26(&mut result);
 
+    // println!("Result of mod 26:");
+    // result.display();
     result.join_columns()
 }
 
@@ -213,8 +403,6 @@ fn apply_mod_26(matrix: &mut [Vec<usize>]) {
             // ! this is because to display in console, it is easier to cast as u8 then char
             // ! than creating a 26 char array and map each one to it
             // * also easier to debug!
-            assert!(matches!(*column as u8, b'A'..=b'Z'));
-            *column -= b'A' as usize;
             *column %= 26;
             *column += b'A' as usize;
         }
@@ -226,23 +414,31 @@ fn apply_mod_26(matrix: &mut [Vec<usize>]) {
 /// better than implementing multiple functions
 trait Matrix {
     #[doc = "Prints the matrix in a raw format (As numbers)"]
-    fn display_raw(&self);
+    fn display(&self);
+
     #[doc = "Takes every element of the vec, in order and joins in a single string"]
     #[doc = "Order: First row -> Print all columns, then move to the next one"]
     /// I created this function first but I realised it was not matching the expected
     /// results, and the matrix it was receiving was correct. I'm leaving its definition
     /// despite not being used
     fn join_rows(&self) -> String;
+
     #[doc = "Goes column by column concatenating the result into a string"]
+    #[doc = "THIS FUNCTION WAS GENERATED BY AI"]
     fn join_columns(&self) -> String;
+
     #[doc = "Returns the number of columns (Crashes the program if not aligned)"]
     fn num_columns(&self) -> usize;
+
     #[doc = "Returns the number of rows"]
     fn num_rows(&self) -> usize;
+
     #[doc = "Returns a column N value (Like a[0][0], a[1][0], a[2][0], ...)"]
     fn get_column(&self, n: usize) -> Vec<usize>;
+
     #[doc = "Returns a row N value. Crashes if out of bounds"]
     fn get_row(&self, n: usize) -> &[usize];
+
     #[doc = "Checks if the matrix is square (like 2x2, 3x3, ...)"]
     fn is_square_matrix(&self) -> bool;
 }
@@ -261,6 +457,13 @@ impl<T: AsRef<[Vec<usize>]>> Matrix for T {
         }
         result
     }
+    /**
+     * #[CHATGPT 5 THINKING]
+     * PROMPT: I haave a &self and a method join_columns that should:
+     * - Take on &self an impl AsRef<[Vec<usize>]> (Matrix is aligned)
+     * and join in a string column by column instead of row by row
+     * all characters in it are valid ASCII, so convert them to char
+     */
     fn join_columns(&self) -> String {
         let mut result = String::new();
         // start with columns then move to rows
@@ -273,7 +476,7 @@ impl<T: AsRef<[Vec<usize>]>> Matrix for T {
         }
         result
     }
-    fn display_raw(&self) {
+    fn display(&self) {
         for row in self.as_ref() {
             for (i, col) in row.iter().enumerate() {
                 // print everything with an tab in between
