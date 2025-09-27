@@ -1,4 +1,8 @@
-/target
+*/target
 *.lock
 hillrail_encrypt_test
 *.txt
+*.exe
+*.pdb
+*.pdf
+**/hw2_auto_grader
