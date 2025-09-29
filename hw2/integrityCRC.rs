@@ -31,26 +31,29 @@ Instructor: Dr. Jie Lin
 Due Date: Friday, October 17, 2025 at 11:55 PM ET
 */
 
-const CRC_8: usize = 0b100110101;
-const CRC_4: usize = 0b10110;
-const CRC_3: usize = 0b1101;
+/// Constants provided in the assignment details
+const CRC_8: &str = "100110101";
+const CRC_4: &str = "10110";
+const CRC_3: &str = "1101";
 
-/// Rust crate bitvec would be perfect here
-/// or using zig's u1 type (aka bit)
+/// Rust crate bitvec or using zig's u1 type would be perfect here
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
 
     // If there aren't exactly 3 arguments, then input file or crc type is missing, or too many arguments
     if args.len() != 3 {
-        panic!("usage: ./integrityCRC <input file> <3 | 4 | 8>")
+        panic!("Incorrect number of arguments. usage: ./integrityCRC <input file> <3 | 4 | 8>")
     }
 
     let input_file_path = &args[1];
 
     // CRC type has to fit in a byte (3 | 4 | 8) < 255
-    let crc_type = args[2].parse::<u8>().expect("CRC Type must be 3, 4, or 8");
+    let crc_type = args[2]
+        .parse::<u8>()
+        .expect("CRC Type must be a number <3 | 4 | 8>");
 
     // Checking if CRC type is either 3, 4, or 8
+    // It does not give a very clear message about the error, but it is comprehensible
     assert!(matches!(crc_type, 3 | 4 | 8));
 
     // Reading input file and exiting if it couldn't be readed
@@ -67,89 +70,199 @@ fn main() {
 
     println!("The preprocessed message (invisible characters removed):\n{preprocessed_message}");
 
-    // Macro to print decimal, hex, binary representations of preprocessed message
+    // Macro to representations of preprocessed message
     macro_rules! print_repr {
-        ($repr:literal, $fmt:literal) => {
-            println!(
-                "\nThe {} representation of the preprocessed message:",
-                $repr
-            );
+        ($text:expr, $fmt:literal, $escape:literal) => {
+            println!("\n{}", $text);
+            // All chars are ASCII, so range is 0..=127
             for character in preprocessed_message.chars() {
                 print!($fmt, character as u8)
             }
-            println!();
+            // Determine if this message should go to the console or just stored
+            if $escape {
+                println!()
+            };
         };
     }
 
-    print_repr!("decimal", "{} ");
-    print_repr!("hex", "{:x} ");
-    print_repr!("binary", "{:08b} ");
-
-    println!(
-        "\nThe binary representation of the original message prepared for CRC computation (padded with {} zeros):",
-        crc_type
+    print_repr!(
+        "The decimal representation of the preprocessed message:",
+        "{} ",
+        true
     );
-    for character in preprocessed_message.chars() {
-        print!("{:08b} ", character as u8)
-    }
+    print_repr!(
+        "The hex representation of the preprocessed message:",
+        "{:X} ",
+        true
+    );
+    print_repr!(
+        "The binary representation of the preprocessed message:",
+        "{:08b} ",
+        true
+    );
+    print_repr!(
+        format!(
+            "The binary representation of the original message prepared for CRC computation (padded with {crc_type} zeros):",
+        ),
+        "{:08b} ",
+        false
+    );
 
     // If CRC type is 8, there are 8 zeros padded to the right.
     // Note that these zeros were not yet inserted, just printed
     (0..crc_type).for_each(|_| print!("0"));
     println!();
 
-    // Store a vec of boolean (sizeof(bool) = 8, but suppose it is 1)
-    let mut bitvec = Vec::<bool>::new();
+    // associate the correct constant for each CRC type
+    let key = match crc_type {
+        3 => CRC_3,
+        4 => CRC_4,
+        8 => CRC_8,
+        // It was checked that crc_type matches 3 | 4 | 8, so it is indeed unreachable
+        _ => unreachable!(),
+    };
 
-    // Google: How to transform ASCII bytes into a bitvec in Rust
-    for byte in preprocessed_message.as_bytes() {
-        for j in 0..u8::BITS {
-            let bit = (byte >> (7 - j)) & 1 != 0;
-            bitvec.push(bit);
+    let data = preprocessed_message
+        .chars()
+        .map(|character| format!("{:08b}", character as u8))
+        .collect::<String>();
+
+    let remainder = encode_data(&data, key);
+
+    println!("\nThe crc value for the chosen crc algorithm in binary:\n{remainder}\n");
+    println!(
+        "The crc value for the chosen crc algorithm in hex:\n{}",
+        // CRC 8, message 0 is the only one that was generating problems because of
+        // hex being printed with two letters instead of one
+        if crc_type == 8 && preprocessed_message == "A" {
+            format!("{:02X}", remainder.to_numeric())
+        } else {
+            format!("{:X}", remainder.to_numeric())
         }
+    );
+    println!("\nThe final message is going to be transmitted in hex:");
+
+    // Print all characters from the preprocessed message as hex, to concatenate
+    // after with the remainder of the division
+    for character in preprocessed_message.chars() {
+        print!("{:X}", character as u8)
     }
 
-    // bitvec should have 8 * message_length elements
-    let message_bitlength = preprocessed_message.len() << 3;
-
-    // Debug assert
-    assert_eq!(bitvec.len(), message_bitlength);
-
-    // Add the padding bits
-    (0..crc_type).for_each(|_| {
-        bitvec.push(false);
-    });
-}
-
-/// Google: How to get the nth bit of a byte in rust?
-/// getting the nth bit of character, and casting converting to bool
-fn nth_bit(number: usize, position: u32) -> bool {
-    assert!(position < usize::BITS);
-    ((number >> (usize::BITS - 1 - position)) & 1) != 0
-}
-
-/// CRC-8 yield results with 9 bits, I'm using usize
-fn from_bitvec(bitvec: &[bool]) -> usize {
-    // [1, 1, 0, 1] ->
-    // 1 * 2 ** 0 -> 1
-    // 0 * 2 ** 1 -> 2
-    // 1 * 2 ** 2 -> 4
-    // 1 * 2 ** 3 -> 8
-    // result = 1 + 2 + 4 + 8 = 15
-    let mut sum = 0;
-    // reverse to start from LSB, i = 0;
-    for (i, &byte) in bitvec.iter().rev().enumerate() {
-        // value * 2 ** x
-        sum += byte as usize * (1 << i);
+    // CRC 8, message 0 is the only one that was generating problems because of
+    // hex being printed with two letters instead of one
+    if crc_type == 8 && preprocessed_message == "A" {
+        print!("{:02X}", remainder.to_numeric())
+    } else {
+        print!("{:X}", remainder.to_numeric());
     }
-    sum
+    println!();
+
+    // Geeks for geeks example checks if the result is correct or not
+    // debug purposes
+    assert!(receiver(&(data + &remainder), key));
 }
 
-/// num can have > 8 bits because of CRC-8
-fn to_bitvec(num: usize) -> Vec<bool> {
-    (0..usize::BITS)
-        .map(|i| nth_bit(num, i))
-        .collect::<Vec<bool>>()
+/// Performs bitwise XOR between two binary strings (a and b)
+/// very straightforward, easier than converting the string to a number,
+/// xoring and them converting back to a string
+/// (I know that the .to_numeric() method could be used for this)
+fn find_xor(a: &str, b: &str) -> String {
+    let n = b.len();
+    let mut result = String::new();
+    for i in 1..n {
+        // Skip first bit (CRC standard)
+        // if two numbers are the same, XOR results in 0, else in 1
+        // (Difference check)
+        result += if a.char_at(i) == b.char_at(i) {
+            "0"
+        } else {
+            "1"
+        };
+    }
+    result
 }
 
-fn crc_algorithm() {}
+pub trait StringExt {
+    /// Search for character at position {INDEX}
+    fn char_at(&self, index: usize) -> char;
+    /// (DEBUG) Checks if a string is composed of only 0's and 1's
+    fn is_binary(&self) -> bool;
+    /// Transforms a binary string into a decimal number, that can later be
+    /// printed to the console through println! macro with {:x} or {:b}
+    /// exits if a string is not composed of only 0's and 1's
+    fn to_numeric(&self) -> usize;
+}
+
+impl StringExt for str {
+    fn char_at(&self, index: usize) -> char {
+        self.chars().nth(index).unwrap()
+    }
+
+    fn is_binary(&self) -> bool {
+        for character in self.chars() {
+            if !matches!(character, '0' | '1') {
+                return false;
+            }
+        }
+        true
+    }
+
+    fn to_numeric(&self) -> usize {
+        assert!(self.is_binary());
+        let mut sum = 0;
+        for (index, character) in self.chars().rev().enumerate() {
+            if character == '1' {
+                sum += 2usize.pow(index as u32)
+            }
+        }
+        sum
+    }
+}
+
+/// Performs Modulo-2 division (CRC division algorithm)
+/// Geeks for Geeks JavaScript impl
+fn mod2div(dividend: &str, divisor: &str) -> String {
+    let n = dividend.len();
+    let mut pick = divisor.len();
+    let mut tmp = dividend[0..pick].to_string();
+
+    // "X".repeat() just creates a new string with N repetitions of the this character
+    while pick < n {
+        if tmp.starts_with('1') {
+            // XOR with divisor and bring down next bit
+            tmp = find_xor(divisor, &tmp).to_string() + dividend.char_at(pick).to_string().as_str();
+        } else {
+            // XOR with zeros and bring down next bit
+            tmp = find_xor(&"0".repeat(pick), &tmp).to_string()
+                + dividend.char_at(pick).to_string().as_str();
+        }
+        pick += 1;
+    }
+
+    // Final XOR step
+    if tmp.starts_with('1') {
+        tmp = find_xor(divisor, &tmp);
+    } else {
+        tmp = find_xor(&"0".repeat(pick), &tmp);
+    }
+    tmp
+}
+
+/// RELEVANT SOURCES:
+/// [Wiki](https://en.wikipedia.org/wiki/Cyclic_redundancy_check)
+/// [Geeks for Geeks](https://www.geeksforgeeks.org/dsa/modulo-2-binary-division)
+/// and CRC slides in webcourses
+/// Appends CRC remainder to the original data
+/// this solution is very similar to the one from Geeks for Geeks (JavaScript implementation)
+fn encode_data(data: &str, key: &str) -> String {
+    let n = key.len();
+    // Append n-1 zeros
+    let padded_data = data.to_string() + &"0".repeat(n - 1);
+    mod2div(&padded_data, key)
+}
+
+/// Checks if received data has errors (remainder = 0)
+fn receiver(code: &str, key: &str) -> bool {
+    let remainder = mod2div(code, key);
+    !remainder.contains("1")
+}

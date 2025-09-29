@@ -6,3 +6,4 @@ hillrail_encrypt_test
 *.pdb
 *.pdf
 **/hw2_auto_grader
+*.md
