@@ -1,0 +1,134 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{url}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{CIS3360 Research Paper\\}
+
+\author{\IEEEauthorblockN{Luiz Gustavo Santana Dias Gomes}
+\IEEEauthorblockA{\textit{Student} \\
+\textit{UCF}\\
+Orlando, United States \\
+lu123351@ucf.edu}
+}
+
+\maketitle
+
+\begin{IEEEkeywords}
+JBS, cyberattack, ransomware attack, REvil
+\end{IEEEkeywords}
+
+\section{Introduction}
+JBS is a Brazilian meatpacking company that controls 25\% of global production of meat and poultry. In May 30, 2021 a cyberattack with finantial motivations, orchestrated by Russian hacker group REvil forced the company to shutdown its operations in plants in the United States, Australia and Canada for two days, and pay a ransom of \$11 million in bitcoin. 
+
+\section{Immediate consequences of the attack}
+Two days after the cyberattack was announced, global meat prices increase by 1\%, FBI opened investigations against the Russian group REvil, and the president of the United States of that period, Joe Biden, talked with Russian president Vladimir Putin and threatened to shut down the group's servers if no action was taken by the Russian government, adding that despite the attack not sponsored by the Russian government, cooperation and information about the case is expected.
+
+\section{The ransom payment}
+Quickly after the breach was discovered, JBS executives decided that the best action to take was to pay the ransom to avoid leaking or losing data from their facilities and harming consumers. The chief executive André Nogueira said ``This was a very difficult decision to make for our company and for me personally'', referring to the payment of \$11 million to the attackers through bitcoin.
+
+\subsection{Why paying in bitcoin}\label{SCM}
+\begin{itemize}
+\item Bitcoin is known for its fast, cross-border settlement without traditional intermediaries or government agencies, reducing friction and allowing attackers to receive funds quickly even across multiple jurisdictions.
+\item Anonymity and the use of mixers make very difficult to track the beneficial ownership, making post-payment recovery difficult.
+\item Transactions are irreversible and publicly verifiable on-chain, which lets attackers confirm payment instantly while minimizing their own counterpart risk.
+\item Bitcoin trades occur at every moment on deep global markets, making large transfers feasible on short notice during an incident.
+\item Sanctions and law-enforcement risks encourage criminals to prefer crypto over traditional banks and government controlled currencies; Sanctioned nations such as North Korea have used crypto to route around financial controls.
+\item Bitcoin was being negotiated at \$35{,}000 on the day of the attack, later increasing by 2\% on the following days. Given this information, it is estimated that about 400 bitcoins were transferred to the attackers although nothing was officially confirmed.
+\end{itemize}
+
+\section{Global footprint and industry importance}
+As the world's largest meatpacking company, JBS employs 280,000 people across 250 production facilities, serving customers in almost all countries. In the U.S., JBS and its peers collectively process a very large share of national beef capacity; disruption at a single firm can ripple into supply, pricing, and logistics, and cause severe impacts on food chains that heavily depend on meet for their menu such as Chipotle and McDonalds.
+
+\section{Operational disruption}
+The Cyberattack temporarily halted slaughter and processing across the United States, Australia, and Canada. In Australia, work stopped across 47 sites and as many it is estimated that 7,000 employees were affected. In the U.S., reporting documented beef plants being forced offline for part of June 1, and daily USDA figures reflected a sudden drop in slaughter volumes by about 22\% and a short-term price increase in wholesales. Operations resumed within the next 48 to 72 hours. However, confirmation about the stability of the operations were given only by June 9, 2021 when JBS and FBI officially confirmed the payment of the random to the press..
+
+\section{Comparison with the Colonial Pipeline ransomware incident}
+Both the JBS and Colonial Pipeline incidents happenede on May - June 2021, and were high-leverage ransomware operations against firms at critical supply-chain industries. In each case, the victim halted core operations due to IT compromise and business risks, even where industrial-control assets were not conclusively shown to be directly encrypted. Colonial suspended fuel flows for six days, triggering fuel shortages and price spikes mainly in Southern United States. JBS paid an \$11 million ransom and returned to service in roughly two to three days. The parallel illustrates how IT outages and inefficiency can cause general panic, safety concerns, and shutdown core logistics systems.
+
+\section{United States and Russian government responses}
+Because REvil operated from Russian territory, the U.S. publicly pressed Russian government to act and provide more information about the group. President Biden signaled that infrastructure used by ransomware operators could be disrupted if Russia failed to take action against cyberattacker groups. Russian authorities later announced arrests tied to REvil. However, no later than two years, cyberattacks linked to the Russian territory went back to action, targeting other global companies, mainly those operating in the United States.
+
+\section{What made the attack possible - OT exposure}
+JBS has stated in its official website that the company spends over \$200 million annually, but the incident emphasizes that spend does not equal resilience. JBS's footprint is vast and heterogeneous, and like many food processors it still relies on legacy operational technology (OT) and plant-floor automation for scheduling, tracing, and compliance tasks. These systems are old and were produced to remain in offline networks, with some extent of manual management. However, these systems were inadequately modified and promoted new connection possibilities without the proper attention to security, which was the major flaw explored by the Russian attackers. 
+
+\section{Reputation, prior scandals, and South American market optics}
+JBS and its parent group have faced high-profile corruption scandals and settlements in recent years, keeping the company under intense public and regulatory scrutiny, particularly across South American markets, mainly in Brazil, where the name JBS is a became a synonym of corruption. This is thought to be one of the reasons why chief executives of JBS prioritized a fast restoration path and containment of potential data exposure. Internally, paying the ransom was seem as a way to limit operational and reputation fallout, avoiding prolonged shutdowns, preventing leaks of sensitive operational data, and reassuring retailers and consumers that supply would normalize quickly. In markets where brand trust is closely tied to food safety and reliability, prolonged disruptions or high-visibility data leaks could have compounded reputational damage and threat the domain of the brand in global markets, and cripple even further its brand name in the Brazilian market.
+
+\section{On the incentives created by paying ransoms}
+Law-enforcement and cyber authorities consistently warn that paying ransoms can incentivize further attacks by keeping the criminal business model profitable. Payment does not guarantee that data will be deleted or systems fully restored, and victims can face repeat extortion. This creates a policy tension: executives may judge payment as the least-bad option in an acute crisis - losing some amount of money that would soon be recovered without further damage - yet each payment sustains a market that targets the next victim. A durable solution requires stronger baseline security, rapid restoration capability, and collective disincentives that raise attacker costs and lower expected returns.
+
+\section{Relevant Topics}
+
+\subsection{Weak repercussion on the Brazilian press}
+The rapid resolution of the case by paying the ransom apparently was a good choice to preserve JBS brand and avoid making its way to the newspapers headlines. The incident had no repercussions whatsoever in the Brazilian newspapers, mainly due to other news of a serial killer and an unconstitutional prison of a house member by the Brazilian supreme court, whose events contributed to overshadow this event and keep JBS from having other major financial losses, despite having just paid the second highest bitcoin ransom in history.
+
+\subsection{Threat Actor Background and Prior Activity}
+\subsubsection{Who was behind the attack and was this their first major operation?}\label{sec:who}
+The JBS intrusion is attributed to the REvil (also known as Sodinokibi) ransomware-as-a-service collective. It was \textit{not} their first major operation. Prior to 2021, REvil affiliates had already executed high-profile intrusions against enterprises across finance, legal services, and technology supply chains, demonstrating mature playbooks and global reach.
+
+\subsubsection{Previous attacks and outcomes}
+REvil-linked campaigns in 2019--2021 included large extortion demands against well-known brands and service providers. Outcomes varied: some victims reportedly paid to expedite restoration or suppress leaks; others refused and relied on restoration from backups, emergency rebuilds, or decryptors obtained by partners or law enforcement. Several REvil-operated leak sites periodically went offline as pressure mounted, and arrests and infrastructure seizures were later announced by authorities.
+
+\subsubsection{Resolution and mitigation patterns}
+Typical mitigations included segmented rebuilds, credential resets, accelerated patching of remote-access systems, tightened multi-factor authentication (Today is known as 2FA), and incident-response hardening (mainly through backups). Over time, many organizations also reduced exposure by limiting remote administrative interfaces and adopting zero-trust access controls and other alternatives that require a new authentication for every login.
+
+\subsubsection{Sponsorship or affiliation}
+Open-source reporting characterizes REvil as a financially motivated criminal enterprise operating largely from within Russia or nearby regions, structured as a franchise with affiliates. None of the hackers are officially sponsored by the Russian state.
+
+\subsubsection{Why the methods remain active}
+They persist because the economics favor attackers: credential theft is cheap, and payouts can be large - The ransom payment by JBS reinforces this philosophy, and the \$11 million payment gave the group another reason to persist in their actions. Methods become less effective where defenders deploy two factor authentications everywhere, segment IT/OT, harden identity - The food industry started to update their systems after this attack.
+\\\\
+\section{Timeline of Key Events (JBS 2021)}
+\begin{itemize}
+  \item \textbf{Early 2021:} Reconnaissance and staging period (weeks) culminating in enterprise compromise.
+  \item \textbf{May 30 - June 1:} Incident publicly disclosed; plants in the U.S., Australia, and Canada taken offline; measurable daily drops in slaughter volumes and a short-term rise in wholesale prices. Although no official confirmation was provided, damages can reach up to \$1 billion if the global supply chain effect is considered.
+  \item \textbf{June 2 - 3:} Progressive restoration; most facilities resume operations within roughly 48--72 hours.
+  \item \textbf{June 9:} Company confirms an \${11} million bitcoin payment to contain disruption and reduce data-leak risk.
+  \item \textbf{June - July:} Diplomatic engagement; U.S. leadership publicly presses Russia to act against ransomware operators.
+  \item \textbf{Subsequent months/years:} Periodic disruptions to the group’s infrastructure and arrests announced; methods and affiliates persist under shifting banners.
+\end{itemize}
+
+
+\begin{thebibliography}{00}
+
+\bibitem{b1}
+``JBS S.A. ransomware attack,'' \emph{Wikipedia}, 2025. [Online]. Available: \url{https://en.wikipedia.org/wiki/JBS_S.A._ransomware_attack}. Accessed: Sep. 30, 2025.
+
+\bibitem{b2}
+Reuters, ``Some U.S. meat plants stop operating after JBS cyber attack,'' 2021. [Online]. Available: \url{https://www.reuters.com/world/us/some-us-meat-plants-stop-operating-after-jbs-cyber-attack-2021-06-01/}. Accessed: Sep. 30, 2025.
+
+\bibitem{b3}
+``JBS pagou R\$ 55 milhões de resgate de dados após ataque de ransomware,'' \emph{TecMundo}, 2021. [Online]. Available: \url{https://www.tecmundo.com.br/seguranca/218972-jbs-pagou-r-55-milhoes-resgate-dados-ataque-ransomware.htm}. Accessed: Sep. 30, 2025.
+
+\bibitem{b4}
+``JBS pagou o segundo maior resgate com bitcoin da história após ataque hacker, mostra relatório,'' \emph{InfoMoney}, 2021. [Online]. Available: \url{https://www.infomoney.com.br/mercados/jbs-pagou-segundo-maior-resgate-com-bitcoin-da-historia-apos-ataque-hacker-mostra-relatorio/}. Accessed: Sep. 30, 2025.
+
+\bibitem{b5}
+BBC News, ``JBS: World's largest meat processing company hit by cyber-attack,'' 2021. [Online]. Available: \url{https://www.bbc.com/news/world-us-canada-57318965}. Accessed: Oct. 1, 2025.
+
+\bibitem{b6}
+``An Overview of the 2021 JBS Meat Supplier Ransomware Attack,'' \emph{Mitnick Security Blog}, 2021. [Online]. Available: \url{https://www.mitnicksecurity.com/blog/an-overview-of-the-2021-jbs-meat-supplier-ransomware-attack}. Accessed: Oct. 1, 2025.
+
+\bibitem{b7}
+Federal Bureau of Investigation, ``FBI Statement on JBS Cyberattack,'' 2021. [Online]. Available: \url{https://www.fbi.gov/news/press-releases/fbi-statement-on-jbs-cyberattack}. Accessed: Oct. 1, 2025.
+
+\bibitem{b8}
+Claroty, ``JBS Attack Puts Food and Beverage Cybersecurity to the Test,'' 2021. [Online]. Available: \url{https://claroty.com/blog/jbs-attack-puts-food-and-beverage-cybersecurity-to-the-test}. Accessed: Oct. 1, 2025.
+
+\bibitem{b9}
+``REvil,'' \emph{Wikipedia}, 2025. [Online]. Available: \url{https://en.wikipedia.org/wiki/REvil}. Accessed: Oct. 1, 2025.
+
+\end{thebibliography}
+
+
+\end{document}
